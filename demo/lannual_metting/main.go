@@ -7,6 +7,7 @@ import (
 	"strings"
 	"math/rand"
 	"time"
+	"sync"
 )
 
 func newApp() *iris.Application {
@@ -20,8 +21,10 @@ type lottertyController struct {
 }
 
 var userList []string
+var mu sync.Mutex
 
 func main() {
+	mu = sync.Mutex{}
 	app := newApp()
 	app.Run(iris.Addr(":8888"))
 	userList = make([]string, 0)
@@ -32,6 +35,9 @@ func (c *lottertyController) Get() string {
 }
 
 func (c *lottertyController) PostImport() string {
+	mu.Lock()
+	defer mu.Unlock()
+
 	usersStr := c.Ctx.FormValue("users")
 	users := strings.Split(usersStr, ",")
 	cnt1 := len(userList)
@@ -46,6 +52,9 @@ func (c *lottertyController) PostImport() string {
 }
 
 func (c *lottertyController) GetLucky() string {
+	mu.Lock()
+	defer mu.Unlock()
+
 	luckyUser := ""
 	if len(userList) == 0 {
 		luckyUser = "no user"
